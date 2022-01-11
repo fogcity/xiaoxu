@@ -2,18 +2,10 @@
   "name": "xiaoxu",
   "version": "0.0.1",
   "description": "Another me",
-  "main": "example/build/index.js",
-  "module": "example/build/index.js",
-  "files": [
-    "example/build"
-  ],
-  "typings": "example/build/index.d.ts",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development concurrently --kill-others \"rollup -wc rollup.config.js\" \"cd example && npm start\"",
-    "build:dev": "cross-env NODE_ENV=development rollup -c rollup.config.js",
-    "build:prod": "cross-env NODE_ENV=production rollup -c rollup.config.js",
-    "size": "size-limit",
-    "analyze": "size-limit --why"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -31,27 +23,21 @@
   "bugs": {
     "url": "https://github.com/fogcity/xiaoxu/issues"
   },
-  "size-limit": [
-    {
-      "path": "example/build/index.js",
-      "limit": "15 KB"
-    }
-  ],
   "homepage": "https://github.com/fogcity/xiaoxu#readme",
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "@tensorflow/tfjs": "^3.12.0",
+    "@tensorflow/tfjs-node": "^3.12.0",
+    "numjs": "^0.16.1",
+    "mathjs": "^10.0.2"
+  },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^14.0.0",
-    "@rollup/plugin-node-resolve": "^8.4.0",
-    "@size-limit/preset-small-lib": "^5.0.5",
-    "concurrently": "^7.0.0",
-    "cross-env": "^7.0.3",
-    "prettier": "^2.5.1",
-    "rollup": "^2.61.1",
-    "rollup-plugin-filesize": "^9.1.1",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-terser": "^6.1.0",
-    "rollup-plugin-typescript2": "^0.31.1",
-    "size-limit": "^5.0.5",
-    "tslib": "^2.3.1",
-    "typescript": "^4.5.4"
+    "@types/numjs": "^0.16.1",
+    "@types/react": "^17.0.33",
+    "@types/react-dom": "^17.0.10",
+    "@vitejs/plugin-react": "^1.0.7",
+    "typescript": "^4.4.4",
+    "vite": "^2.7.2"
   }
 }
