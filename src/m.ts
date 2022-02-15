@@ -3,26 +3,31 @@ export type Matrix = number[] | number[][] | number[][][] | number[][][][]
 export function getShape(v: Matrix) {
   return [v.length, getArrayDepth(v)]
 }
-export function getArrayDepth(arr: any[]): any {
+
+export function getArrayAverage(array: any[]) {
+  return array.reduce((previous, current) => (current += previous)) / array.length
+}
+export function getArrayDepth(array: any[]): any {
   return (
     1 +
-    (arr instanceof Array
-      ? arr.reduce(function (max, item) {
+    (array instanceof Array
+      ? array.reduce(function (max, item) {
           return Math.max(max, getArrayDepth(item))
         }, 0)
       : -1)
   )
 }
 // 随机排序函数
-export function shuffle(array: number[]) {
-  let currentIndex = array.length,
+export function useShuffleArray(array: number[]) {
+  let resultArray = array
+  let currentIndex = resultArray.length,
     randomIndex
   while (currentIndex != 0) {
     randomIndex = Math.floor(Math.random() * currentIndex)
     currentIndex--
-    ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
+    ;[resultArray[currentIndex], resultArray[randomIndex]] = [resultArray[randomIndex], resultArray[currentIndex]]
   }
-  return array
+  return resultArray
 }
 // 计算向量点积
 export function dot(a: Vector, b: Vector) {
@@ -39,7 +44,7 @@ export function dot(a: Vector, b: Vector) {
  * @param step 步长
  * @returns
  */
-export function xrange(stop: number, start: number = 0, step: number = 1) {
+export function useRange(stop: number, start: number = 0, step: number = 1) {
   const ra: Vector = []
   for (let i = start; i < stop; i += step) {
     ra.push(i)
@@ -47,7 +52,7 @@ export function xrange(stop: number, start: number = 0, step: number = 1) {
   return ra
 }
 // 获得高斯分布随机值
-export function randn_bm() {
+export function useRandn() {
   let u = 0,
     v = 0
   while (u === 0) u = Math.random() //Converting [0,1) to (0,1)
@@ -62,7 +67,7 @@ export function hadamard(s: Vector, t: Vector) {
   }, [])
 }
 // 将两个向量转置重组
-export function zip(a: Matrix, b: Matrix) {
+export function useZip(a: Matrix, b: Matrix) {
   return (a as Vector).reduce((r: any[], v, i) => {
     r.push([v, b[i]])
     return r
@@ -86,5 +91,3 @@ export function useZerosMatrix(shape: Matrix): Matrix {
 export function useOnesMatrix(shape: Vector): Matrix {
   return useMatrix(shape, 1)
 }
-
-console.log(getArrayDepth([1, [2, [2]], 3, 4]))
