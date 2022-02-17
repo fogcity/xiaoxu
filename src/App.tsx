@@ -11,7 +11,7 @@ import {
   useRandn,
   dot,
 } from './m'
-
+import {} from './SVM'
 type Network = {
   num_layers: number // 层数
   sizes: Vector // 尺寸
@@ -190,12 +190,8 @@ function App() {
       0.066, 0.068, 0.61, 0.057,
     ],
   })
-
-  useEffect(() => {
-    const n = useNetwork([2, 3, 1])
-    console.log(n.weights[1])
-    console.log(useFeedforward(n, []))
-  })
+  // chain rule : ∂f(q,z)∂x=∂q(x,y)∂x∂f(q,z)∂q
+  useEffect(() => {})
 
   return <div></div>
 }
