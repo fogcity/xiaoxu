@@ -11,7 +11,7 @@ import {
   useRandn,
   dot,
 } from './m'
-import {} from './SVM'
+import {} from './SVM2d'
 type Network = {
   num_layers: number // 层数
   sizes: Vector // 尺寸

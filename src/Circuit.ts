@@ -1,4 +1,4 @@
-import { multiplyGate, addGate, Gate } from './Gate'
+import { MultiplyGate, AddGate, Gate } from './Gate'
 
 export interface Circuit {
   mulg0: Gate
@@ -11,10 +11,10 @@ export interface Circuit {
 export type CircuitConstructor = { new (): Circuit }
 
 export const Circuit = function (this: Circuit) {
-  this.mulg0 = new multiplyGate()
-  this.mulg1 = new multiplyGate()
-  this.addg0 = new addGate()
-  this.addg1 = new addGate()
+  this.mulg0 = new MultiplyGate()
+  this.mulg1 = new MultiplyGate()
+  this.addg0 = new AddGate()
+  this.addg1 = new AddGate()
 } as unknown as CircuitConstructor
 Circuit.prototype = {
   forward: function (x: number, y: number, a: number, b: number, c: number) {
