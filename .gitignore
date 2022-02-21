@@ -39,7 +39,7 @@ example/index.js
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
-
+data/*
 # Dependency directories
 node_modules/
 jspm_packages/

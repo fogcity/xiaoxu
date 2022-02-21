@@ -25,8 +25,11 @@
   },
   "homepage": "https://github.com/fogcity/xiaoxu#readme",
   "dependencies": {
+    "@tensorflow/tfjs": "^3.13.0",
+    "d3": "^7.3.0",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "seedrandom": "~2.4.3"
   },
   "devDependencies": {
     "@types/react": "^17.0.33",
