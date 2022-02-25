@@ -92,6 +92,8 @@ SigmoidGate.prototype = {
   },
   backward: function () {
     const s = this.sigmoid(this.u0.value)
+    console.log('this.u0.grad', this.u0.grad)
+
     this.u0.grad += s * (1 - s) * this.utop.grad
   },
 }
@@ -180,7 +182,7 @@ const checkGradients = () => {
 
   console.log(`%cgradients check[${[a_grad, b_grad, c_grad, x_grad, y_grad]}]`, 'color:#d2d')
 }
-const fit = (epochs: number) => {
+export const fit = (epochs: number) => {
   let w = 0
   while (w <= epochs) {
     if (w == 1) {
@@ -195,5 +197,3 @@ const fit = (epochs: number) => {
     w++
   }
 }
-
-// fit(1000)

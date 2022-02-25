@@ -1,5 +1,5 @@
 import { Unit } from './Gate'
-import { Circuit } from './Circuit'
+import { Circuit, createCircuit } from './Circuit'
 
 // SVM:
 export interface SVM {
@@ -22,7 +22,7 @@ const SVM = function (this: SVM) {
   this.b = new Unit(1.22, 0.0)
   this.c = new Unit(-0.53, 0.0)
 
-  this.circuit = new Circuit()
+  this.circuit = createCircuit()
 } as unknown as SVMCreator
 
 SVM.prototype = {

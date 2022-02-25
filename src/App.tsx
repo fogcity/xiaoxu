@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-
+import { fit } from './Gate'
 import * as tf from '@tensorflow/tfjs'
 export const loadData = async (trainSize: number = 50, testSize: number = 50) => {
   const dataCsvConfigs = {
@@ -39,6 +39,7 @@ function App() {
     ;(async function () {
       try {
         const { trainData, testData, numOfFeatures } = await loadData()
+        // fit(100)
       } catch (e) {
         console.error(e)
       }

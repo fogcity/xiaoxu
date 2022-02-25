@@ -10,7 +10,7 @@ export interface Circuit {
 }
 export type CircuitConstructor = { new (): Circuit }
 
-export const Circuit = function (this: Circuit) {
+const Circuit = function (this: Circuit) {
   this.mulg0 = new MultiplyGate()
   this.mulg1 = new MultiplyGate()
   this.addg0 = new AddGate()
@@ -32,4 +32,8 @@ Circuit.prototype = {
     this.mulg1.backward() // sets gradient in b and y
     this.mulg0.backward() // sets gradient in a and x
   },
+}
+
+export function createCircuit(): Circuit {
+  return new Circuit()
 }
