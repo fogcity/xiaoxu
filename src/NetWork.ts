@@ -1,15 +1,4 @@
-import {
-  getShape,
-  getArrayDepth,
-  Vector,
-  Matrix,
-  useZerosMatrix,
-  useShuffleArray,
-  useRange,
-  useZip,
-  useRandn,
-  dot,
-} from './m'
+import { getShape, getArrayDepth, Vector, Matrix, zeros, shuffle, range, zip, random, dot } from './m'
 type Network = {
   num_layers: number // 层数
   sizes: Vector // 尺寸
@@ -33,14 +22,14 @@ function cost_derivative(output_activations: number, y: number) {
 }
 
 function vectorized_result(shape: Vector, target: number) {
-  const e = useZerosMatrix(shape)
+  const e = zeros(shape)
   e[target] = 1.0
   return e
 }
 
 // 获得前馈神经网络的值
 const useFeedforward = (n: Network, a: Vector) => {
-  return useZip(n.biases, n.weights).map(([b, w]: [number, Vector]) => sigmoid(dot(w, a) + b))
+  return zip(n.biases, n.weights).map(([b, w]: [number, Vector]) => sigmoid(dot(w, a) + b))
 }
 
 /**
@@ -51,7 +40,7 @@ const useFeedforward = (n: Network, a: Vector) => {
  * @param eta 学习率
  * @param test_data 测试集
  */
-const useSgd = (
+const sgd = (
   network: Network,
   training_data: Vector,
   epochs: number,
@@ -62,13 +51,17 @@ const useSgd = (
   const n_test = test_data?.length // 测试集数量
   const n = training_data.length // 训练集数量
   for (let j = 0; j < epochs; j++) {
-    const td = useShuffleArray(training_data)
+    /**
+     * 随机打乱数据 并 取总数据的许多个切片concat成一个新的数据集
+     */
 
+    const td = shuffle(training_data)
     const mini_batches = []
-    for (const k of useRange(n, 0, mini_batch_size)) {
+    for (const k of range(n, 0, mini_batch_size)) {
       mini_batches.push(td.slice(k, k + mini_batch_size))
     }
 
+    // 用新的batch数据集训练网络
     for (const mini_batch of mini_batches) {
       updateMiniBatch(network, mini_batch, eta)
     }
@@ -85,46 +78,49 @@ const useSgd = (
  * @param eta 学习率
  */
 const updateMiniBatch = (n: Network, mini_batch: Matrix, eta: number) => {
-  let nabla_b = n.biases.map((b) => {
-    return useZerosMatrix(getShape(b as Matrix))
+  // 获取b的偏导数
+  let nabla_b = n.biases.map((b: any) => {
+    return zeros(getShape(b as Matrix))
   }) as Matrix
 
-  let nabla_w = n.weights.map((w) => {
-    return useZerosMatrix(getShape(w as Matrix))
+  // 获取w的偏导数
+  let nabla_w = n.weights.map((w: any) => {
+    return zeros(getShape(w as Matrix))
   }) as Matrix
+
   for (const batch of mini_batch) {
     const [x, y] = batch as number[]
 
-    const [delta_nabla_b, delta_nabla_w] = useBackprop(n, x, y)
+    const [delta_nabla_b, delta_nabla_w] = backprop(n, x, y)
 
-    nabla_b = useZip(nabla_b, delta_nabla_b).map(([nb, dnb]) => nb + dnb)
-    nabla_w = useZip(nabla_w, delta_nabla_w).map(([nw, dnw]) => nw + dnw)
+    nabla_b = zip(nabla_b, delta_nabla_b).map(([nb, dnb]) => nb + dnb)
+    nabla_w = zip(nabla_w, delta_nabla_w).map(([nw, dnw]) => nw + dnw)
 
-    n.weights = useZip(n.weights, nabla_w).map(([w, nw]) => w - (eta / mini_batch.length) * nw)
-    n.biases = useZip(n.biases, nabla_b).map(([b, nb]) => b - (eta / mini_batch.length) * nb)
+    n.weights = zip(n.weights, nabla_w).map(([w, nw]) => w - (eta / mini_batch.length) * nw)
+    n.biases = zip(n.biases, nabla_b).map(([b, nb]) => b - (eta / mini_batch.length) * nb)
     return n
   }
 }
 
-function useBackprop(n: Network, x: Vector, y: Vector) {
-  let nabla_b = n.biases.map((b) => useZerosMatrix(b as Matrix))
-  let nabla_w = n.weights.map((w) => useZerosMatrix(w as Matrix))
+function backprop(n: Network, x: any, y: any) {
+  let nabla_b = n.biases.map((b: any) => zeros(b as Matrix))
+  let nabla_w = n.weights.map((w: any) => zeros(w as Matrix))
   let activation: number | Vector = x
   let activations = [x] // list to store all the activations, layer by layer
 
-  let zs = [] // list to store all the z vectors, layer by layer
+  let zs: number[] = [] // list to store all the z vectors, layer by layer
 
-  useZip(n.biases, n.weights).map(([b, w]: [number, Vector]) => {
+  zip(n.biases, n.weights).map(([b, w]: [number, Vector]) => {
     const z = dot(w, activation as Vector) + b
     zs.push(z)
     activation = sigmoid(z)
     activations.push(activation as unknown as Vector)
   })
   // backward pass
-  // const delta = cost_derivative(activations[activations.length - 1], y) * sigmoid_derivative(zs[zs.length - 1])
-  // nabla_b[-l] = delta
-  // nabla_w[-l] = dot(delta, activations[-l - 1].transpose())
-  // return nabla_b, nabla_w
+  const delta = cost_derivative(activations[activations.length - 1], y) * sigmoid_derivative(zs[zs.length - 1])
+  nabla_b[-l] = delta
+  nabla_w[-l] = dot(delta, activations[-l - 1].transpose())
+  return [nabla_b, nabla_w]
 }
 
 // mean absolute error
@@ -137,18 +133,18 @@ export function useNetwork(sizes: number[]) {
     let a = []
     let b = []
     for (let index = 0; index < v; index++) {
-      b.push(useRandn())
+      b.push(random())
     }
     a.push(b)
     return a
   })
 
-  const w = useZip(size_w, size_b).map(([x, y]) => {
+  const w = zip(size_w, size_b).map(([x, y]) => {
     let a = []
     let b = []
     for (let index = 0; index < y; index++) {
       for (let index = 0; index < x; index++) {
-        b.push(useRandn())
+        b.push(random())
       }
       a.push(b)
       b = []
@@ -164,6 +160,13 @@ export function useNetwork(sizes: number[]) {
   }
 
   return n
+}
+
+function getNumericalGradient(f: Function, x: number[], h?: number = 0.00001) {
+  // f在x处的数值梯度法的简单实现
+  // - f是只有一个参数的函数
+  // - x是计算梯度的点
+  return x.map((v) => ((f(v + h) - f(v - h)) / 2) * h)
 }
 
 const evaluate = (test_data: Vector) => {}

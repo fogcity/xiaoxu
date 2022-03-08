@@ -92,7 +92,6 @@ SigmoidGate.prototype = {
   },
   backward: function () {
     const s = this.sigmoid(this.u0.value)
-    console.log('this.u0.grad', this.u0.grad)
 
     this.u0.grad += s * (1 - s) * this.utop.grad
   },
@@ -184,16 +183,20 @@ const checkGradients = () => {
 }
 export const fit = (epochs: number) => {
   let w = 0
+  let s;
   while (w <= epochs) {
     if (w == 1) {
       console.log(`%cgradients[${[a.grad, b.grad, c.grad, x.grad, y.grad]}]`, 'color:#d27')
       checkGradients()
     }
-    const s = sgd(w % 25 == 0)
+   s = sgd(w % 25 == 0)
     if (w % 25 == 0) {
       console.log('%ccircuit output after one backprop: ' + s.value, 'color:red')
     }
 
     w++
   }
+
+  return s
 }
+

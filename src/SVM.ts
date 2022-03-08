@@ -1,6 +1,6 @@
 import { Unit } from './Gate'
 import { Circuit, createCircuit } from './Circuit'
-
+// 折叶损失（hinge loss），有时候又被称为最大边界损失（max-margin loss）
 // SVM:
 export interface SVM {
   learnFrom(x: Unit, y: Unit, label: number): void
@@ -13,7 +13,7 @@ export interface SVM {
 }
 export type SVMCreator = { new (): SVM }
 
-const SVM = function (this: SVM) {
+export const SVM = function (this: SVM) {
   // SVM class -> f(x,y)=ax+by+c .
   // random initial parameter values
 
@@ -58,65 +58,10 @@ SVM.prototype = {
     this.parameterUpdate() // parameters respond to tug
   },
   parameterUpdate: function () {
-    const step_size = 0.0001
+    const step_size = 0.01
     this.a.value += step_size * this.a.grad
     this.b.value += step_size * this.b.grad
     this.c.value += step_size * this.c.grad
   },
 }
 
-const data: number[][] = [],
-  labels: number[] = [-1, -1, 1, -1]
-data.push([1.2, 0.7])
-data.push([1.6, 0.1])
-data.push([-0.3, -0.5])
-data.push([-0.7, -0.1])
-
-console.table(data)
-
-// 初始化svm
-const svm = new SVM()
-
-// a function that computes the classification accuracy
-const evalTrainingAccuracy = () => {
-  let num_correct = 0
-  for (let i = 0; i < data.length; i++) {
-    const x = new Unit(data[i][0], 0.0)
-    const y = new Unit(data[i][1], 0.0)
-    const true_label = labels[i]
-
-    // see if the prediction matches the provided label
-    const v = svm.forward(x, y).value
-
-    const predicted_label = v > 0 ? 1 : -1
-
-    if (predicted_label === true_label) {
-      num_correct++
-    }
-  }
-
-  return num_correct / data.length
-}
-
-// the learning loop
-for (let iter = 0; iter < 100000; iter++) {
-  // pick a random data point
-  const i = Math.floor(Math.random() * data.length)
-
-  const x = new Unit(data[i][0], 0.0)
-  const y = new Unit(data[i][1], 0.0)
-
-  const label = labels[i]
-
-  svm.learnFrom(x, y, label)
-
-  if (iter % 25 == 0) {
-    // console.log('data[i]', data[i])
-    // console.log('labels[i]', labels[i])
-    // every 10 iterations...
-    console.log(
-      '%ctraining accuracy at iter ' + iter + '/500' + ': ' + evalTrainingAccuracy(),
-      'color:green;font-size:1.2em',
-    )
-  }
-}
