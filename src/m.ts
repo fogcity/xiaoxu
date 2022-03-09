@@ -1,16 +1,14 @@
-const Matrix = class extends Array {
-  constructor() {
-    super()
-  }
+const Matrix = class {
+  constructor() {}
 
-  static get [Symbol.species]() {
-    return Array
+  get shape() {
+    return []
   }
-
   get T() {
     return []
   }
-
+  row(i: number) {}
+  column(i: number) {}
   static ones = 'Point'
   static zeros = ''
 }
@@ -152,6 +150,6 @@ export function useMatrix(shape: any[], fill: number): any[] {
 export function zeros(shape: any[]): any[] {
   return useMatrix(shape, 0)
 }
-export function useOnesMatrix(shape: Vector): Matrix {
+export function useOnesMatrix(shape: Vector): any {
   return useMatrix(shape, 1)
 }
