@@ -15,7 +15,7 @@ export const Point = class<T> {
   toArray() {
     return this.v
   }
-  sub(t: Point | typeof Vector) {
+  sub(t: typeof Point | typeof Vector) {
     if (typeof t == typeof Vector) {
       //   const r = new Point([this.x - t.x])
     } else if (typeof t == typeof Point) {
