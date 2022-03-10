@@ -4,7 +4,7 @@ import { NearestNeighbor } from './KNN'
 import * as tf from '@tensorflow/tfjs'
 import { mean, sum, zip } from './m'
 import { SVM } from './SVM'
-import {} from './Vector'
+import {} from './Neuron'
 export const loadData = async (trainSize: number = 50, testSize: number = 50) => {
   const dataCsvConfigs = {
     columnConfigs: {
@@ -133,6 +133,7 @@ const svmTrain = async function () {
     console.error(e)
   }
 }
+
 function App() {
   // chain rule : ∂f(q,z)∂x=∂q(x,y)∂x∂f(q,z)∂q
   useEffect(() => {

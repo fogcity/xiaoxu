@@ -4,11 +4,15 @@ const Matrix = class {
   get shape() {
     return []
   }
+
   get T() {
     return []
   }
+
   row(i: number) {}
+
   column(i: number) {}
+
   static ones = 'Point'
   static zeros = ''
 }
