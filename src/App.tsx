@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fit, Unit } from './Gate'
-import { NearestNeighbor } from './KNN'
+import { KNearestNeighbor } from './KNN'
 import * as tf from '@tensorflow/tfjs'
 import { mean, sum, zip } from './m'
 import { SVM } from './SVM'
-import {} from './Neuron'
+import { tensor } from '@tensorflow/tfjs'
+
 export const loadData = async (trainSize: number = 50, testSize: number = 50) => {
   const dataCsvConfigs = {
     columnConfigs: {
@@ -39,31 +40,26 @@ export const loadData = async (trainSize: number = 50, testSize: number = 50) =>
 
 const knnTrain = async function () {
   try {
-    const { trainData, testData, numOfFeatures } = await loadData(10, 4)
+    const { trainData, testData, numOfFeatures } = await loadData(20, 5)
+    const Xtr = tensor(trainData.map((v) => v.xs) as number[][])
+    const Ytr = tensor(trainData.map((v) => v.ys) as number[][])
+    const Xte = tensor(testData.map((v) => v.xs) as number[][])
+    const Yte = tensor(testData.map((v) => v.ys) as number[][])
 
-    const nn = new NearestNeighbor('L1')
-    nn.train(
-      trainData.map((v) => v.xs),
-      trainData.map((v) => v.ys),
-    )
-    const Yte_predict = nn.predict(
-      testData.map((v) => v.xs),
-      7,
-    )
+    const knn = new KNearestNeighbor('L2')
+    knn.train(Xtr, Ytr)
+    const Yte_pre = knn.predict(Xte)
+
     const acc =
       sum(
-        zip(
-          Yte_predict,
-          testData.map((v) => v.ys),
-        ).map((v, i) => {
-          const vf = v.flat()
-          if (vf[0] == vf[1]) {
+        zip(Yte_pre.flat(), (Yte.arraySync() as number[]).flat()).map((v, i) => {
+          if (v[0] == v[1]) {
             return 100
           }
 
           return 0
         }),
-      ) / Yte_predict.length
+      ) / (Yte_pre as number[]).length
     console.log(`accuracy: ${acc}%`)
   } catch (e) {
     console.error(e)
@@ -137,7 +133,7 @@ const svmTrain = async function () {
 function App() {
   // chain rule : ∂f(q,z)∂x=∂q(x,y)∂x∂f(q,z)∂q
   useEffect(() => {
-    // svmTrain()
+    knnTrain()
   })
 
   return <div></div>
