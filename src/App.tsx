@@ -4,7 +4,9 @@ import { KNearestNeighbor } from './KNN'
 import * as tf from '@tensorflow/tfjs'
 import { mean, sum, zip } from './m'
 import { SVM } from './SVM'
+import { svmLoss } from './SVM2d'
 import { tensor } from '@tensorflow/tfjs'
+import { randomReLUWeight } from './weight'
 
 export const loadData = async (trainSize: number = 50, testSize: number = 50) => {
   const dataCsvConfigs = {
@@ -40,7 +42,7 @@ export const loadData = async (trainSize: number = 50, testSize: number = 50) =>
 
 const knnTrain = async function () {
   try {
-    const { trainData, testData, numOfFeatures } = await loadData(20, 5)
+    const { trainData, testData, numOfFeatures } = await loadData(100, 100)
     const Xtr = tensor(trainData.map((v) => v.xs) as number[][])
     const Ytr = tensor(trainData.map((v) => v.ys) as number[][])
     const Xte = tensor(testData.map((v) => v.xs) as number[][])
@@ -48,25 +50,26 @@ const knnTrain = async function () {
 
     const knn = new KNearestNeighbor('L2')
     knn.train(Xtr, Ytr)
-    const Yte_pre = knn.predict(Xte)
+    const Yte_pre = knn.predict(Xte, 7)
+    console.log(
+      `accuracy: ${
+        sum(
+          zip(Yte_pre.flat(), (Yte.arraySync() as number[]).flat()).map((v, i) => {
+            if (v[0] == v[1]) {
+              return 100
+            }
 
-    const acc =
-      sum(
-        zip(Yte_pre.flat(), (Yte.arraySync() as number[]).flat()).map((v, i) => {
-          if (v[0] == v[1]) {
-            return 100
-          }
-
-          return 0
-        }),
-      ) / (Yte_pre as number[]).length
-    console.log(`accuracy: ${acc}%`)
+            return 0
+          }),
+        ) / (Yte_pre as number[]).length
+      }%`,
+    )
   } catch (e) {
     console.error(e)
   }
 }
 
-const svmTrain = async function () {
+const svmUnitTrain = async function () {
   try {
     const { trainData, testData, numOfFeatures } = await loadData(10, 4)
 
@@ -129,11 +132,24 @@ const svmTrain = async function () {
     console.error(e)
   }
 }
+const svmTrain = async () => {
+  const f = 10
+  const { trainData, testData, numOfFeatures } = await loadData(10, 4)
+  const Xtr = tensor(trainData.map((v) => v.xs) as number[][])
+  const Ytr = tensor(trainData.map((v) => v.ys) as number[][])
+  const Xte = tensor(testData.map((v) => v.xs) as number[][])
+  const Yte = tensor(testData.map((v) => v.ys) as number[][])
+  const x = Xtr // array of 2-dimensional data
+  const y = Ytr // array of labels
+  const w = randomReLUWeight([f]) // example: random numbers
+  const reg = 0.00005 // regularization strength
 
+  const [loss, grad] = await svmLoss(w, x, y, reg)
+}
 function App() {
   // chain rule : ∂f(q,z)∂x=∂q(x,y)∂x∂f(q,z)∂q
   useEffect(() => {
-    knnTrain()
+    svmTrain()
   })
 
   return <div></div>

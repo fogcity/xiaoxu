@@ -14,16 +14,13 @@ import {
   softmax,
   sigmoid,
 } from '@tensorflow/tfjs'
+import { randomReLUWeight } from './weight'
 export class Neuron {
   public weights!: Tensor
   public bias: number = 0
   constructor() {}
   forward(inputs: Tensor) {
-    console.log('input.shape', inputs.shape)
-    const r = sqrt(div(2.0, inputs.shape))
-    const w = randomNormal(inputs.shape)
-
-    !this.weights && (this.weights = w.mul(r))
+    !this.weights && (this.weights = randomReLUWeight(inputs.shape))
     console.log('#w', this.weights.toString())
     console.log('#input', inputs.toString())
 
