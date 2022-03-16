@@ -133,18 +133,23 @@ const svmUnitTrain = async function () {
   }
 }
 const svmTrain = async () => {
-  const f = 10
-  const { trainData, testData, numOfFeatures } = await loadData(10, 4)
-  const Xtr = tensor(trainData.map((v) => v.xs) as number[][])
-  const Ytr = tensor(trainData.map((v) => v.ys) as number[][])
-  const Xte = tensor(testData.map((v) => v.xs) as number[][])
-  const Yte = tensor(testData.map((v) => v.ys) as number[][])
-  const x = Xtr // array of 2-dimensional data
-  const y = Ytr // array of labels
-  const w = randomReLUWeight([f]) // example: random numbers
-  const reg = 0.00005 // regularization strength
+  const trainNumber = 1
+  const classNumber = 784
+  const labelNumber = 10
+  const { trainData, testData, numOfFeatures } = await loadData(trainNumber, 1)
+  const xTrain = tensor(trainData.map((v) => v.xs) as number[][])
+  console.log(
+    'trainData.map((v) => v.ys)',
+    trainData.map((v) => v.ys),
+  )
 
-  const [loss, grad] = await svmLoss(w, x, y, reg)
+  const yTrain = tensor(trainData.map((v) => v.ys) as number[][])
+  const xTest = tensor(testData.map((v) => v.xs) as number[][])
+  const yTest = tensor(testData.map((v) => v.ys) as number[][])
+  const w = randomReLUWeight([labelNumber, classNumber]) // example: random numbers
+  const reg = 0 // regularization strength
+
+  const [loss, grad] = await svmLoss(w, xTrain, yTrain, reg)
 }
 function App() {
   // chain rule : ∂f(q,z)∂x=∂q(x,y)∂x∂f(q,z)∂q
