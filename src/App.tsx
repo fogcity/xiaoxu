@@ -133,20 +133,17 @@ const svmUnitTrain = async function () {
   }
 }
 const svmTrain = async () => {
-  const trainNumber = 1
+  const trainNumber = 2
   const classNumber = 784
   const labelNumber = 10
   const { trainData, testData, numOfFeatures } = await loadData(trainNumber, 1)
   const xTrain = tensor(trainData.map((v) => v.xs) as number[][])
-  console.log(
-    'trainData.map((v) => v.ys)',
-    trainData.map((v) => v.ys),
-  )
 
+  xTrain.shape
   const yTrain = tensor(trainData.map((v) => v.ys) as number[][])
   const xTest = tensor(testData.map((v) => v.xs) as number[][])
   const yTest = tensor(testData.map((v) => v.ys) as number[][])
-  const w = randomReLUWeight([labelNumber, classNumber]) // example: random numbers
+  const w = randomReLUWeight([classNumber, labelNumber]) // example: random numbers
   const reg = 0 // regularization strength
 
   const [loss, grad] = await svmLoss(w, xTrain, yTrain, reg)

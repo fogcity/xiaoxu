@@ -8,7 +8,7 @@
 // - **optimize** the loss function with **SGD**
 // - **visualize** the final learned weights
 
-import { Tensor, tensor, scalar, zeros, range, dot, max } from '@tensorflow/tfjs'
+import { Tensor, tensor, scalar, zeros, range, dot, max, Log } from '@tensorflow/tfjs'
 import { loadData } from './App'
 import { L2regularization } from './Regularization'
 import { randomReLUWeight } from './weight'
@@ -29,35 +29,42 @@ import { randomReLUWeight } from './weight'
  */
 export async function svmLoss(w: Tensor, x: Tensor, y: Tensor, reg: number) {
   const dW = zeros(w.shape) // initialize the gradient as zero
-  const wArray = (await w.array()) as number[][]
-  const xArray = (await x.array()) as number[][]
-  const yArray = (await y.array()) as number[]
-  console.log('yArray', yArray)
+  const wArray = (await w.array()) as number[][] // (2, 784)
+  const xArray = (await x.array()) as number[][] // (784, 10)
+  const yArray = (await y.array()) as number[] // (10, 1)
+  console.log(yArray)
 
   // compute the loss and the gradient
 
-  const classNumber = w.shape[1] as number
-  console.log('class number', classNumber)
+  const classNumber = w.shape[1] as number // 10
+  const trainNumber = x.shape[0] // 2
 
-  const trainNumber = x.shape[0]
-  console.log('train number', trainNumber)
   let loss = 0.0
   for (const i of await range(0, trainNumber).array()) {
-    console.log('image ' + i)
+    console.log('xArray[i]', xArray[i])
+    console.log('wArray', wArray)
 
-    const scores = dot(wArray, xArray[i])
+    const scores = dot(xArray[i], wArray)
     const scoresArray = (await scores.array()) as number[]
     console.log('scoresArray', scoresArray)
 
-    const yi = yArray[i]
-
     for (const j of await range(0, classNumber).array()) {
+      const yi = yArray[i]
+      console.log('yi', yi)
+      console.log('j != yi', j != yi)
       if (j != yi) {
-        const margin = scoresArray[j] - yi + 1
+        const margin = scoresArray[j] - scoresArray[yi] + 1
         loss += Math.max(margin, 0)
+
+        // compute grad
+        // 公式2
+        // dW[:,y[i]] += -X[i,:].T
+        // 公式1
+        // dW[:,j] += X[i, :].T
       }
     }
   }
+
   // Right now the loss is a sum over all training examples, but we want it
   // to be an average instead so we divide by numTrain.
   loss /= trainNumber
