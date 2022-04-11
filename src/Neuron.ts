@@ -28,11 +28,10 @@ export class Neuron {
     const wx = this.weights.dot(inputs)
     // y = w*x+b
     const y = wx.add(this.bias)
-    console.log('y', y.toString())
 
     // active
     const out = relu(y)
-    console.log('relu', out.toString())
+    console.log('relu', out.print())
     return out
   }
 }

@@ -19,6 +19,7 @@ import {
   sigmoid,
   tensor1d,
   bincount,
+  tidy,
 } from '@tensorflow/tfjs'
 import { most } from './m'
 export class KNearestNeighbor {
@@ -38,41 +39,43 @@ export class KNearestNeighbor {
     const y = this.y.arraySync() as number[]
     // 遍历测试集
     for (const i in range(0, nt).arraySync()) {
-      let ds: number[] = []
-      for (const trainI of trainXArray) {
-        let d = tensor(trainI).sub(testXArray[i])
+      tidy(() => {
+        let ds: number[] = []
+        for (const trainI of trainXArray) {
+          let d = tensor(trainI).sub(testXArray[i])
 
-        if (this.reg == 'L1') {
-          d = d.abs().sum()
-        } else {
-          d = d.square().sum().sqrt()
+          if (this.reg == 'L1') {
+            d = d.abs().sum()
+          } else {
+            d = d.square().sum().sqrt()
+          }
+          ds.push(d.arraySync() as number)
         }
-        ds.push(d.arraySync() as number)
-      }
 
-      let min_index: number
+        let min_index: number
 
-      if (k == 1) {
-        // 如果k=1取最近的一个
-        min_index = tensor1d(ds).argMin().arraySync() as number
-        Ypred[i] = y[min_index]
-      } else {
-        // 否则取最近的k个里标签出现最多的，有同样多的就取距离最近的
-        console.log('dist', ds)
+        if (k == 1) {
+          // 如果k=1取最近的一个
+          min_index = tensor1d(ds).argMin().arraySync() as number
+          Ypred[i] = y[min_index]
+        } else {
+          // 否则取最近的k个里标签出现最多的，有同样多的就取距离最近的
+          console.log('dist', ds)
 
-        const dist_k = [...ds]
-          .sort((a, b) => a - b)
-          .slice(0, k)
-          .sort((a, b) => b - a)
+          const dist_k = [...ds]
+            .sort((a, b) => a - b)
+            .slice(0, k)
+            .sort((a, b) => b - a)
 
-        console.log('dist_k', dist_k)
-        console.log('y label', y.flat())
+          console.log('dist_k', dist_k)
+          console.log('y label', y.flat())
 
-        const predLabels = dist_k.map((v) => y.flat()[ds.indexOf(v)]).flat()
-        console.log('predLabels', predLabels)
+          const predLabels = dist_k.map((v) => y.flat()[ds.indexOf(v)]).flat()
+          console.log('predLabels', predLabels)
 
-        Ypred[i] = most(predLabels) as number
-      }
+          Ypred[i] = most(predLabels) as number
+        }
+      })
     }
     return Ypred
   }
