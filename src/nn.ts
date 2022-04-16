@@ -22,14 +22,16 @@ import {
   TensorContainer,
   tidy,
   data,
+  dot,
 } from '@tensorflow/tfjs'
 import { zip } from './m'
+import { log } from './utils'
 
 import { randomReLUWeight } from './weight'
 
 type Data = {
-  xs: TensorContainer[]
-  ys: TensorContainer[]
+  xs: TensorLike[]
+  ys: TensorLike[]
 }
 export class NN {
   public num_layers = 0
@@ -55,7 +57,7 @@ export class NN {
 
     // 初始化weights并打印
 
-    this.weights = zip(shape_w, shape_b).map(([x, y], i) => {
+    this.weights = zip(shape_w, shape_b).map(([x, y]) => {
       return randomNormal([y, x])
     })
     console.log('weights:')
@@ -108,37 +110,76 @@ export class NN {
   }
 
   backprop(miniBatch: Data) {
+    console.log('miniBatch', miniBatch)
+
     const { xs: x, ys: y } = miniBatch
     const nb = this.biases.map((b) => zeros(b.shape))
     const nw = this.weights.map((w) => zeros(w.shape))
-    // feedforward
-
-    tensor(x as number[]).print()
+    // 前馈开始
     let tx: any = tensor(x as number[])
-    let as = [x]
-    const zs = []
+    let ty: any = tensor(y as number[])
+    let as = [tx]
+    let zs: Tensor[] = []
     zip(this.biases, this.weights).map(([b, w]: [Tensor, Tensor], i) => {
       console.log(i + ':')
 
       console.log('w')
       w.print()
-      console.log('a')
+      console.log('x')
       tx.print()
-      const wa = w.dot(tx)
-      console.log('wa')
-      wa.print()
-      const z = wa.add(b)
-      console.log('z')
+      const wx = w.dot(tx)
+      console.log('w*x')
+      wx.print()
+      console.log('b')
+      b.print()
+      const z = wx.add(b)
+      console.log('w*x+b')
       z.print()
 
       zs.push(z)
       tx = z.sigmoid()
-      console.log('sigmoid(x):')
+      console.log('sigmoid(w*x+b):')
       tx.print()
       as.push(tx)
     })
-    //backward
-    return [[0], [0]]
+
+    // 查看前馈结果
+    log('forward result:')
+    log('zs')
+    zs.map((v) => v.print())
+    log('as')
+    as.map((v) => v.print())
+
+    // 反向传播开始
+    this.cost_derivative(as[as.length - 1], ty).print()
+
+    this.sigmoid_derivative(zs[zs.length]).print()
+    let delta = this.cost_derivative(as[as.length - 1], ty).mul(this.sigmoid_derivative(zs[zs.length]))
+    log('delta')
+    delta.print()
+    nb[nb.length - 1] = delta
+    nw[nw.length - 1] = delta.dot(as[nw.length - 2].transpose())
+
+    range(2, this.num_layers)
+      .arraySync()
+      .map((l) => {
+        const z = zs[nb.length - l]
+        const sp = this.sigmoid_derivative(z)
+        delta = dot(this.weights[-l + 1].transpose(), delta).mul(sp)
+        nb[nb.length - 1] = delta
+        nb[nb.length - 1] = dot(delta, as[-l - 1].transpose())
+      })
+
+    return [nb, nw]
   }
+  cost_derivative(output_activations: Tensor, y: Tensor) {
+    // C = 12 ∑j (yj − aj )2  =>  ∂C/∂aLj = (aj − yj )，
+
+    return output_activations.sub(y)
+  }
+  sigmoid_derivative(z: Tensor) {
+    return z.sigmoid().mul(scalar(1).sub(z.sigmoid()))
+  }
+
   evaluate(testData: Tensor) {}
 }

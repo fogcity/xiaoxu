@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, version } from 'react'
 import { fit, Unit } from './Gate'
 import { KNearestNeighbor } from './KNN'
 import * as tf from '@tensorflow/tfjs'
@@ -6,8 +6,10 @@ import { mean, sum, zip } from './m'
 import { SVM } from './SVM'
 import { svmLoss } from './SVM2d'
 import { NN } from './nn'
-import { tensor, tidy } from '@tensorflow/tfjs'
+import * as nn from './NN-based'
+import { randomNormal, tensor, tidy } from '@tensorflow/tfjs'
 import { randomReLUWeight } from './weight'
+import { log } from './utils'
 
 export const loadData = async (trainSize: number = 50, testSize: number = 50) => {
   const dataCsvConfigs = {
@@ -75,20 +77,52 @@ const knnTrain = async function () {
 const nnTrain = async function () {
   try {
     // const { trainData, testData, numOfFeatures } = await loadData(10, 100)
-    // console.log('trainData', trainData)
-
     // const trainX = tensor(trainData.map((v) => v.xs) as number[][])
     // const trainY = tensor(trainData.map((v) => v.ys) as number[][])
     // const Xte = tensor(testData.map((v) => v.xs) as number[][])
     // const Yte = tensor(testData.map((v) => v.ys) as number[][])
     // const td = trainData
+    // const n = new NN([2, 3, 1])
+    // const d = [
+    //   { xs: [[3], [2]], ys: [1] },
+    //   { xs: [[4], [4]], ys: [0] },
+    // ]
+    const featureNumber = 2
+    const datas = randomNormal([10, featureNumber]).arraySync() as number[][]
+    const labels = randomNormal([10, 1]).arraySync() as number[]
+    console.log('datas', datas)
 
-    const n = new NN([3, 3, 1])
-    const d = [
-      { xs: [3, 2, 2], ys: [1] },
-      { xs: [4, 4, 1], ys: [0] },
-    ]
-    n.sgd(d, 1, 1, 0.001)
+    const datas2 = randomNormal([10, featureNumber]).arraySync() as number[][]
+    const labels2 = randomNormal([10, 1]).arraySync() as number[]
+
+    // n.sgd(d, 1, 1, 0.001)
+    const n = nn.buildNetwork(
+      [2, 3, 1],
+      nn.Activations.LINEAR,
+      nn.Activations.LINEAR,
+      nn.RegularizationFunction.L2,
+      ['a', 'b'],
+      false,
+    )
+    const learningRate = 0.01
+    const regularizationRate = 0.01
+    const batchSize = 5
+    const epoch = 10
+    for (let i = 0; i < epoch; i++) {
+      datas.forEach((input, i) => {
+        nn.forwardProp(n, input)
+        nn.backProp(n, labels[i], nn.Errors.SQUARE)
+        if ((i + 1) % batchSize === 0) {
+          nn.updateWeights(n, learningRate, regularizationRate)
+        }
+      })
+      const loss = nn.getLoss(n, datas, labels)
+      log(loss + '')
+      const loss2 = nn.getLoss(n, datas2, labels2)
+      log(loss2 + '')
+    }
+
+    console.groupCollapsed(n)
   } catch (e) {
     console.error(e)
   }
@@ -157,6 +191,7 @@ const svmUnitTrain = async function () {
     console.error(e)
   }
 }
+
 const svmTrain = async () => {
   const trainNumber = 2
   const classNumber = 784
@@ -164,7 +199,6 @@ const svmTrain = async () => {
   const { trainData, testData, numOfFeatures } = await loadData(trainNumber, 1)
   const xTrain = tensor(trainData.map((v) => v.xs) as number[][])
 
-  xTrain.shape
   const yTrain = tensor(trainData.map((v) => v.ys) as number[][])
   const xTest = tensor(testData.map((v) => v.xs) as number[][])
   const yTest = tensor(testData.map((v) => v.ys) as number[][])
