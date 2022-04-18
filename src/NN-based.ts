@@ -9,7 +9,7 @@ export class Node {
   id: string
   /** List of input links. */
   inputLinks: Link[] = []
-  bias = 0.1
+  bias = 0.01
   /** List of output links. */
   outputs: Link[] = []
   totalInput!: number
@@ -146,7 +146,7 @@ export class Link {
   id: string
   source: Node
   dest: Node
-  weight = Math.random() - 0.5
+  weight = Math.random() - 0.2
   isDead = false
   /** Error derivative with respect to this weight. */
   errorDer = 0
@@ -241,8 +241,15 @@ export function buildNetwork(
  */
 export function getLoss(network: Node[][], inputs: number[][], labels: number[]): number {
   const loss = inputs.reduce((a, v, i) => {
+    console.log('input', v)
+    console.log('network', network)
+
     let output = forwardProp(network, v)
-    a += Errors.SQUARE.error(output, labels[i])
+    console.log('output', output)
+    const err = Errors.SQUARE.error(output, labels[i])
+    console.log('err', err)
+
+    a += err
     return a
   }, 0)
   return loss / inputs.length
@@ -289,7 +296,6 @@ export function forwardProp(network: Node[][], inputs: number[]): number {
 export function backProp(network: Node[][], target: number, errorFunc: ErrorFunction): void {
   // The output node is a special case. We use the user-defined error
   // function for the derivative.
-  console.log('network', network)
 
   let outputNode = network[network.length - 1][0]
 
@@ -352,7 +358,9 @@ export function backProp(network: Node[][], target: number, errorFunc: ErrorFunc
  */
 export function updateWeights(network: Node[][], learningRate: number, regularizationRate: number) {
   for (let layerIdx = 1; layerIdx < network.length; layerIdx++) {
+    // Select second layer
     let currentLayer = network[layerIdx]
+    // Foreach the second layer's node
     for (let i = 0; i < currentLayer.length; i++) {
       let node = currentLayer[i]
       // Update the node's bias.
@@ -386,6 +394,13 @@ export function updateWeights(network: Node[][], learningRate: number, regulariz
       }
     }
   }
+}
+
+/**
+ * Predict the target of the network
+ */
+export function predict(network: Node[][], target: number[]) {
+  return forwardProp(network, target)
 }
 
 /** Iterates over every node in the network/ */

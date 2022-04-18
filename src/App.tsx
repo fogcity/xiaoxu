@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, version } from 'react'
 import { fit, Unit } from './Gate'
 import { KNearestNeighbor } from './KNN'
 import * as tf from '@tensorflow/tfjs'
-import { mean, sum, zip } from './m'
+import { mean, shuffle, sum, zip } from './m'
 import { SVM } from './SVM'
 import { svmLoss } from './SVM2d'
 import { NN } from './nn'
@@ -10,7 +10,8 @@ import * as nn from './NN-based'
 import { randomNormal, tensor, tidy } from '@tensorflow/tfjs'
 import { randomReLUWeight } from './weight'
 import { log } from './utils'
-
+import { vis } from '../../vis/example/build'
+import * as d3 from 'd3'
 export const loadData = async (trainSize: number = 50, testSize: number = 50) => {
   const dataCsvConfigs = {
     columnConfigs: {
@@ -88,41 +89,75 @@ const nnTrain = async function () {
     //   { xs: [[4], [4]], ys: [0] },
     // ]
     const featureNumber = 2
-    const datas = randomNormal([10, featureNumber]).arraySync() as number[][]
-    const labels = randomNormal([10, 1]).arraySync() as number[]
+    const dataNumber = 10
+    let labels: number[] = []
+    let datas: number[][] = []
+    for (let i = 0; i < dataNumber; i++) {
+      datas.push([i, i])
+      labels.push(Math.random() > 0.5 ? 1 : 0)
+    }
     console.log('datas', datas)
+    console.log('labels', labels)
 
-    const datas2 = randomNormal([10, featureNumber]).arraySync() as number[][]
-    const labels2 = randomNormal([10, 1]).arraySync() as number[]
+    // const datas2 = randomNormal([dataNumber, featureNumber]).arraySync() as number[][]
+    // const labels2 = randomNormal([dataNumber, 1]).arraySync() as number[]
 
     // n.sgd(d, 1, 1, 0.001)
     const n = nn.buildNetwork(
-      [2, 3, 1],
+      [featureNumber, 1, 1],
       nn.Activations.LINEAR,
-      nn.Activations.LINEAR,
-      nn.RegularizationFunction.L2,
+      nn.Activations.RELU,
+      nn.RegularizationFunction.L1,
       ['a', 'b'],
       false,
     )
-    const learningRate = 0.01
-    const regularizationRate = 0.01
-    const batchSize = 5
+    const learningRate = 0.001
+    const regularizationRate = 0.0001
+    const batchSize = 1
     const epoch = 10
+    const lossPoints: [number, number][] = []
     for (let i = 0; i < epoch; i++) {
       datas.forEach((input, i) => {
         nn.forwardProp(n, input)
         nn.backProp(n, labels[i], nn.Errors.SQUARE)
-        if ((i + 1) % batchSize === 0) {
-          nn.updateWeights(n, learningRate, regularizationRate)
-        }
+        // log('epoch' + i + ':')
+        // console.log(n[0][0].outputs[0])
+        console.log(n[1][0].inputDer)
+
+        nn.updateWeights(n, learningRate, regularizationRate)
       })
       const loss = nn.getLoss(n, datas, labels)
       log(loss + '')
-      const loss2 = nn.getLoss(n, datas2, labels2)
-      log(loss2 + '')
-    }
+      lossPoints.push([i, loss])
 
-    console.groupCollapsed(n)
+      // const loss2 = nn.getLoss(n, datas2, labels2)
+      // log(loss2 + '')
+    }
+    vis.renderLineChart(
+      document.getElementById('c1') as HTMLElement,
+      {
+        dataset: lossPoints,
+        series: [],
+      },
+      {
+        xLabel: 'epoch',
+        yLabel: 'loss',
+        marginLeft: 70,
+        marginBottom: 70,
+        height: 300,
+        yDomain: [0, Math.max(1, ...(d3.extent(lossPoints, (d) => d[1]) as number[]))],
+        showXAxisGrid: true,
+        showYAxisGrid: true,
+        color: '#be123c',
+        lineWidth: 2,
+        curve: d3.curveLinear,
+        xAccessor: (d: any[]) => d[0],
+        yAccessor: (d: any[]) => d[1],
+      },
+    )
+    log('predict')
+
+    console.log(labels[1], nn.predict(n, [1, 1]))
   } catch (e) {
     console.error(e)
   }
@@ -214,7 +249,12 @@ function App() {
     nnTrain()
   })
 
-  return <div></div>
+  return (
+    <>
+      <div id="c1"></div>
+      <div id="c2"></div>
+    </>
+  )
 }
 
 export default App
