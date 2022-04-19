@@ -1,5 +1,3 @@
-import { log } from './utils'
-
 /**
  * A node in a neural network. Each node has a state
  * (total input, output, and their respectively derivatives) which changes
@@ -78,9 +76,13 @@ export interface RegularizationFunction {
 
 /** Built-in error functions */
 export class Errors {
-  public static SQUARE: ErrorFunction = {
+  public static MSE: ErrorFunction = {
     error: (output: number, target: number) => 0.5 * Math.pow(output - target, 2),
     der: (output: number, target: number) => output - target,
+  }
+  public static MAE: ErrorFunction = {
+    error: (output: number, target: number) => Math.abs(output - target),
+    der: (output: number, target: number) => (output - target > 0 ? 1 : -1),
   }
 }
 
@@ -191,9 +193,8 @@ export class Link {
 export function buildNetwork(
   networkShape: number[],
   activation: ActivationFunction,
-  outputActivation: ActivationFunction,
-  regularization: RegularizationFunction,
-  inputIds: string[],
+  outputActivation: ActivationFunction = Activations.LINEAR,
+  regularization: RegularizationFunction = RegularizationFunction.L1,
   initZero?: boolean,
 ): Node[][] {
   let numLayers = networkShape.length
@@ -208,11 +209,7 @@ export function buildNetwork(
     let numNodes = networkShape[layerIdx]
     for (let i = 0; i < numNodes; i++) {
       let nodeId = id.toString()
-      if (isInputLayer) {
-        nodeId = inputIds[i]
-      } else {
-        id++
-      }
+      id++
       let node = new Node(nodeId, isOutputLayer ? outputActivation : activation, initZero)
       currentLayer.push(node)
       if (layerIdx >= 1) {
@@ -241,14 +238,8 @@ export function buildNetwork(
  */
 export function getLoss(network: Node[][], inputs: number[][], labels: number[]): number {
   const loss = inputs.reduce((a, v, i) => {
-    console.log('input', v)
-    console.log('network', network)
-
     let output = forwardProp(network, v)
-    console.log('output', output)
-    const err = Errors.SQUARE.error(output, labels[i])
-    console.log('err', err)
-
+    const err = Errors.MSE.error(output, labels[i])
     a += err
     return a
   }, 0)
@@ -267,7 +258,8 @@ export function getLoss(network: Node[][], inputs: number[][], labels: number[])
  */
 export function forwardProp(network: Node[][], inputs: number[]): number {
   let inputLayer = network[0]
-  if (inputs.length !== inputLayer.length) {
+
+  if (inputs.length != inputLayer.length) {
     throw new Error('The number of inputs must match the number of nodes in' + ' the input layer')
   }
   // Update the input layer.

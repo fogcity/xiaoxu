@@ -88,13 +88,18 @@ const nnTrain = async function () {
     //   { xs: [[3], [2]], ys: [1] },
     //   { xs: [[4], [4]], ys: [0] },
     // ]
-    const featureNumber = 2
-    const dataNumber = 10
+    const featureNumber = 4
+    const dataNumber = 100
     let labels: number[] = []
     let datas: number[][] = []
+    let dd = [1, 2, 3, 4]
     for (let i = 0; i < dataNumber; i++) {
-      datas.push([i, i])
-      labels.push(Math.random() > 0.5 ? 1 : 0)
+      const d = [Math.random(), Math.random() - 0.5, Math.random(), Math.random()]
+      if (i == 3) {
+        dd = d
+      }
+      datas.push(d)
+      labels.push(Math.random())
     }
     console.log('datas', datas)
     console.log('labels', labels)
@@ -103,36 +108,27 @@ const nnTrain = async function () {
     // const labels2 = randomNormal([dataNumber, 1]).arraySync() as number[]
 
     // n.sgd(d, 1, 1, 0.001)
-    const n = nn.buildNetwork(
-      [featureNumber, 1, 1],
-      nn.Activations.LINEAR,
-      nn.Activations.RELU,
-      nn.RegularizationFunction.L1,
-      ['a', 'b'],
-      false,
-    )
+    const n = nn.buildNetwork([featureNumber, 5, 5, 1], nn.Activations.LINEAR)
     const learningRate = 0.001
     const regularizationRate = 0.0001
-    const batchSize = 1
-    const epoch = 10
+    const batchSize = 5
+    const epoch = 20
+    log('start train:', 'green')
     const lossPoints: [number, number][] = []
     for (let i = 0; i < epoch; i++) {
       datas.forEach((input, i) => {
-        nn.forwardProp(n, input)
-        nn.backProp(n, labels[i], nn.Errors.SQUARE)
-        // log('epoch' + i + ':')
-        // console.log(n[0][0].outputs[0])
-        console.log(n[1][0].inputDer)
+        const output = nn.forwardProp(n, input)
 
-        nn.updateWeights(n, learningRate, regularizationRate)
+        nn.backProp(n, labels[i], nn.Errors.MAE)
+        if ((i + 1) % batchSize == 0) nn.updateWeights(n, learningRate, regularizationRate)
       })
       const loss = nn.getLoss(n, datas, labels)
-      log(loss + '')
       lossPoints.push([i, loss])
 
       // const loss2 = nn.getLoss(n, datas2, labels2)
       // log(loss2 + '')
     }
+    log('over train:', 'green')
     vis.renderLineChart(
       document.getElementById('c1') as HTMLElement,
       {
@@ -157,7 +153,7 @@ const nnTrain = async function () {
     )
     log('predict')
 
-    console.log(labels[1], nn.predict(n, [1, 1]))
+    console.log(labels[3], nn.predict(n, dd))
   } catch (e) {
     console.error(e)
   }
