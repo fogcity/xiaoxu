@@ -25,7 +25,6 @@ export const loadData = async (trainSize: number = 50, testSize: number = 50) =>
   const testDataAll = tf.data.csv('/data/fashion-mnist_test.csv', dataCsvConfigs)
 
   const trainData = await trainDataAll
-    .shuffle(3)
     .take(trainSize)
     .map((res: any) => {
       return { xs: Object.values(res.xs), ys: Object.values(res.ys) }
@@ -33,7 +32,6 @@ export const loadData = async (trainSize: number = 50, testSize: number = 50) =>
     .toArray()
 
   const testData = await testDataAll
-    .shuffle(3)
     .take(testSize)
     .map((res: any) => {
       return { xs: Object.values(res.xs), ys: Object.values(res.ys) }
@@ -238,6 +236,7 @@ const svmTrain = async () => {
 
   const [loss, grad] = await svmLoss(w, xTrain, yTrain, reg)
 }
+
 function App() {
   // chain rule : ∂f(q,z)∂x=∂q(x,y)∂x∂f(q,z)∂q
   useEffect(() => {

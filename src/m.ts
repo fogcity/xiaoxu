@@ -124,6 +124,10 @@ export function random() {
   while (v === 0) v = Math.random()
   return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
 }
+
+function randomZero_One() {
+  return Math.round(Math.random())
+}
 // 假设 s 和 t 是两个同样维度的向量。那么我们使⽤ s ⊙ t 来表⽰按元素的 hadamard乘积
 export function hadamard(s: Vector, t: Vector) {
   return s.reduce((r: Vector, v, i) => {
